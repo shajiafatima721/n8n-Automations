@@ -1,0 +1,47 @@
+{
+  "name": "Email Management (Clean Template)", 
+  "nodes": [
+    {
+      "parameters": { "pollTimes": { "item": [{"mode": "custom","cronExpression": "*/5 * * * *"}]} },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [100, 100],
+      "name": "Gmail Trigger",
+      "credentials": { "gmailOAuth2": { "id": "<your-credential-id>", "name": "Gmail" } }
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject: {{ $json.Subject }}\\nEmail body: {{ $json.snippet }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [400, 100],
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": { "modelId": "gpt-4o-mini", "prompt": "You are a friendly summarizer. Summarize this email:\n{{ $json.Subject}}\n{{ $json.snippet}}" },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [600, 100],
+      "name": "OpenAI Summary",
+      "credentials": { "openAiApi": { "id": "<your-credential-id>", "name": "OpenAI" } }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": "<your-google-sheet-id>",
+        "sheetName": "<your-sheet-name>",
+        "columns": { "mappingMode": "defineBelow", "value": { "ID": "={{ $json.id }}","Date": "={{ $now}}","Subject": "={{ $json.Subject}}","Summary": "={{ $json.summary}}","Snippet": "={{ $json.snippet}}" } }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [800, 100],
+      "name": "Save to Google Sheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "<your-credential-id>", "name": "Google Sheets" } }
+    }
+  ],
+  "connections": { "Gmail Trigger": { "main": [ [{"node": "Text Classifier","type": "main","index": 0}] ] },
+                   "Text Classifier": { "main": [ [{"node": "OpenAI Summary","type": "main","index": 0}] ] },
+                   "OpenAI Summary": { "main": [ [{"node": "Save to Google Sheets","type": "main","index": 0}] ] }
+                 }
+}
