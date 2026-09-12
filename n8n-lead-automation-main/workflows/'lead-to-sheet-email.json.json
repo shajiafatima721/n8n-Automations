@@ -1,0 +1,184 @@
+{
+  "name": "Lead → Google Sheets → Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "options": {}
+      },
+      "id": "0b9e35dd-8d4e-487e-8b38-15ba36ad0da1",
+      "name": "Lead Form Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "lead-form"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VjxVD4LpFIA6dBfkJE4rlsDsGvZc62HJxQupHbqmSQs",
+          "mode": "list",
+          "cachedResultName": "Leads spreadsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VjxVD4LpFIA6dBfkJE4rlsDsGvZc62HJxQupHbqmSQs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VjxVD4LpFIA6dBfkJE4rlsDsGvZc62HJxQupHbqmSQs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.body.name }}",
+            "Email": "={{ $json.body.email }}",
+            "Message": "={{ $json.body.message }}",
+            "SubmittedAt": "={{ $now.format('dd LLL yyyy, hh:mm a') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SubmittedAt",
+              "displayName": "SubmittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5af2f7a1-1aa5-4742-9cb5-d717aa8406e6",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BHu494B8IGBHSLNR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lead Form Webhook').item.json.body.email }}",
+        "subject": "We got your message — thanks!",
+        "message": "=Hi {{ $('Lead Form Webhook').item.json.body.name }},\n\nThanks for reaching out! We received your message:\n\n\"{{ $('Lead Form Webhook').item.json.body.message }}\"\n\nWe'll get back to you within 24 hours.\n\n— The Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "95027ece-5c70-417d-a8d8-230db8c1587a",
+      "name": "Send a message",
+      "webhookId": "c121f8ed-c522-4095-9053-afc617e02d1e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "TCBq6LYmx80wKPvL",
+          "name": "Gmail account 5"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Form Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "618c8c2b-f5f0-41be-98a8-4d2053badc64",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d02eec118dbac2514810d243fe3c01df4a49c82e80f18425e0f58629784c9641"
+  },
+  "nodeGroups": [],
+  "id": "I2APVa5bSGq7eL3g",
+  "tags": [
+    {
+      "updatedAt": "2026-09-11T10:33:10.794Z",
+      "createdAt": "2026-09-11T10:33:10.794Z",
+      "id": "ckuEQtEGQ6rcZ4kX",
+      "name": "lead-gen"
+    },
+    {
+      "updatedAt": "2026-09-11T10:33:10.826Z",
+      "createdAt": "2026-09-11T10:33:10.826Z",
+      "id": "fpW3d4QWZ4IfQKuO",
+      "name": "automation"
+    }
+  ]
+}

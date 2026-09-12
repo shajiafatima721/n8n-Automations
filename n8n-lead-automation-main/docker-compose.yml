@@ -1,0 +1,22 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Basic auth for the n8n editor
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      # Public URL n8n advertises for webhooks (must be reachable from the internet)
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - N8N_PORT=5678
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      # Encryption key for stored credentials — generate a long random string
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      # Persist executions so the demo shows run history
+      - EXECUTIONS_DATA_PRUNE=false
+    volumes:
+      - ./n8n_data:/home/node/.n8n
