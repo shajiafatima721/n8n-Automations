@@ -1,106 +1,115 @@
-# n8n Lead Automation ⚡
+# 📨 Automated Lead Capture & Notification System
 
-A self-hosted **n8n** workflow: a web form submits a lead → the lead is appended
-to **Google Sheets** → a confirmation **email** is sent to the customer → a
-notification is pushed to a **Telegram** chat. One workflow, four nodes, zero code.
+An **n8n workflow automation** that instantly captures leads submitted through a web form, logs them in Google Sheets, and sends an automatic confirmation email — all without any manual intervention.
 
-> **Demo:** _record a 60s screen capture after importing (see below)_ ·
-> **Source:** https://github.com/yusizer/n8n-lead-automation
+---
 
-## What the workflow does
+## 📋 Overview
+
+Businesses and websites regularly receive enquiries through contact or lead-generation forms. Manually checking submissions, recording them for follow-up, and replying to each person individually is slow and easy to overlook.
+
+This project uses a **webhook-triggered n8n workflow** to:
+
+1. Receive lead data the instant a form is submitted
+2. Log it into a Google Sheet for record-keeping
+3. Automatically send the lead a personalised confirmation email
+
+---
+
+## 🔄 Workflow
+
+```mermaid
+flowchart LR
+    A[Lead Form Webhook] --> B[Append to Google Sheets]
+    B --> C[Send Confirmation Email - Gmail]
+```
+
+| Step | Node | Function |
+|------|------|----------|
+| 1 | **Lead Form Webhook** | Listens for an incoming `POST` request (e.g. from a website contact form) and captures Name, Email, and Message. |
+| 2 | **Append to Google Sheets** | Adds the lead's details as a new row — Name, Email, Message, and a formatted Submission Date/Time. |
+| 3 | **Send a Message (Gmail)** | Sends a personalised confirmation email back to the lead, thanking them for reaching out. |
+
+---
+
+## 🚀 Features
+
+- ⚡ **Real-time, event-driven** — triggers instantly on form submission (no polling delay)
+- 📊 **Centralized lead log** automatically maintained in Google Sheets
+- 📧 **Personalised auto-reply** email sent to every lead immediately
+- 🧩 **No-code workflow** — easy to extend with more steps (Slack/Telegram alerts, CRM sync, etc.)
+
+---
+
+## 🛠️ Tech Stack
+
+- [n8n](https://n8n.io) (Cloud) — workflow automation platform
+- **Webhook** (HTTP POST) — entry point for lead data
+- **Google Sheets API** — lead data storage
+- **Gmail (OAuth2)** — automated email replies
+
+---
+
+## 📁 Repository Structure
 
 ```
-[ Web form ] → POST /webhook/lead
-   → [ Webhook ] → [ Append to Google Sheets ]
-                  → [ Send confirmation email ]
-                  → [ Notify Telegram chat ]
-```
-
-A visitor fills in the form → within seconds: a new row in your spreadsheet, an
-auto-reply in their inbox, and a ping in your Telegram so you never miss a lead.
-
-## What's in this repo
-
-```
-n8n-lead-automation/
-├── workflows/
-│   └── lead-to-sheet-email-telegram.json   # importable n8n workflow (4 nodes)
-├── form/
-│   └── index.html                          # demo HTML form that posts to the webhook
-├── docker-compose.yml                      # self-host n8n in one command
-├── .env.example                            # n8n config template
+├── lead-to-sheet-email.json            # n8n workflow export (importable)
+├── lead_test_form_v2.html              # Simple HTML form to test the webhook
 └── README.md
 ```
 
-## Run n8n locally
+---
+
+## 🔧 Setup & Installation
+
+1. **Import the workflow**
+   - In n8n, create a new workflow → menu (⋮) → *Import from File* → select `lead-to-sheet-email.json`
+
+2. **Connect Google Sheets**
+   - Create a Google Sheet with columns: `Name | Email | Message | SubmittedAt`
+   - In the **Append to Google Sheets** node, connect your Google account and select the sheet
+
+3. **Connect Gmail**
+   - In the **Send a Message** node, connect your Gmail account (OAuth2)
+   - Update the `To`, `Subject`, and `Message` fields as needed
+
+4. **Publish the workflow**
+   - Click **Publish** in n8n to activate the webhook in production
+
+5. **Copy your webhook URL**
+   - Open the **Lead Form Webhook** node → copy the **Production URL**
+   - It will look like: `https://<your-instance>.app.n8n.cloud/webhook/lead`
+
+---
+
+## 🧪 Testing
+
+Use the included `lead_test_form_v2.html` to simulate a real form submission:
+
+1. Open the file in a browser
+2. Fill in Name, Email, and Message
+3. Click **Submit Test Lead**
+4. Check your Google Sheet and inbox — both should update instantly
+
+You can also test with `curl`:
 
 ```bash
-cp .env.example .env          # Windows: copy .env.example .env
-# edit .env: set a strong N8N_BASIC_AUTH_PASSWORD and a random N8N_ENCRYPTION_KEY
-
-docker compose up -d          # starts n8n on http://localhost:5678
+curl -X POST https://<your-instance>.app.n8n.cloud/webhook/lead \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"you@example.com","message":"Hello!"}'
 ```
 
-Open http://localhost:5678, log in with the credentials from `.env`.
+---
 
-## Import the workflow
+## 🔮 Future Improvements
 
-1. In n8n: **Workflows → Import from File** → choose
-   `workflows/lead-to-sheet-email-telegram.json`.
-2. Open each node and connect its credentials (created once in n8n under
-   **Credentials → New**):
-   - **Google Sheets** — OAuth2 (sign in with the Google account that owns the sheet).
-   - **Send Email** — SMTP (e.g. Gmail SMTP, Brevo, Mailgun).
-   - **Telegram** — create a bot via [@BotFather](https://t.me/botfather), paste the token.
-3. In the **Append to Google Sheets** node, replace `PASTE_YOUR_GOOGLE_SHEET_ID`
-   with your spreadsheet ID (the long string in the sheet URL).
-4. In the **Notify in Telegram** node, replace `PASTE_YOUR_TELEGRAM_CHAT_ID`
-   (get it from [@userinfobot](https://t.me/userinfobot)).
-5. **Activate** the workflow (top-right toggle). Copy the **Webhook URL** n8n shows
-   on the Webhook node (e.g. `http://localhost:5678/webhook/lead`).
+- 🔔 Team notifications via Slack or Telegram when a new lead arrives
+- ✅ Email format validation before processing
+- 🗂️ Integration with a CRM system for advanced lead management
+- 🛡️ Spam/bot protection on the incoming webhook
 
-## Wire up the demo form
+---
 
-Edit `form/index.html` — replace `WEBHOOK_URL` in the `<form action="...">` with
-your webhook URL. Open the form in a browser, submit it, and watch:
-- a new row appear in your Google Sheet,
-- a confirmation email arrive in the inbox,
-- a message land in your Telegram chat.
+## 📄 License
 
-## Deploy n8n (always-on)
-
-The included `docker-compose.yml` runs n8n anywhere with Docker. For a permanent
-public webhook URL:
-
-- **Railway:** create a project from this repo (or a Docker image of n8n) and set
-  the variables from `.env.example`, with `WEBHOOK_URL` = your Railway domain.
-- **VPS (Hetzner / Oracle always-free):** `docker compose up -d` behind a
-  Caddy/Nginx reverse proxy with HTTPS; set `WEBHOOK_URL` to your domain.
-
-Once deployed, set the form's `WEBHOOK_URL` to the public webhook and the demo
-works for anyone, anywhere.
-
-## Record the demo (for the portfolio)
-
-1. Show the form submission.
-2. Cut to the Google Sheet — a new row appears.
-3. Cut to the inbox — confirmation email.
-4. Cut to Telegram — the notification.
-5. Upload to YouTube/Imgur and link it from the portfolio card.
-
-## Notes
-
-- This is a **no-code** project — the "source" is the workflow JSON + self-host
-  config + demo form, not application code (hence no unit tests).
-- The workflow JSON contains credential **placeholders** (`PASTE_CRED_ID`,
-  `PASTE_YOUR_GOOGLE_SHEET_ID`, …) — real credentials live in n8n's encrypted
-  store, never in this repo.
-- n8n is MIT-licensed and free to self-host; the official cloud has a free tier too.
-
-## Screenshots
-
-| Workflow graph | Form → Sheet → Telegram |
-|:---:|:---:|
-| ![workflow](docs/workflow.png) | ![demo](docs/demo.png) |
-
-_Drop screenshots in `docs/` after importing._
+This project is free to use and modify for educational or personal purposes.
